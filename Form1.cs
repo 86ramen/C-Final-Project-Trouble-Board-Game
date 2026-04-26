@@ -9,7 +9,7 @@ namespace Trouble_Group_8_Project
 {
     public partial class Form1 : Form
     {
-
+        private AI_Player Ai;
 
         private (int Color, bool Functional, Color OutlineColor)[] boardCells;
         private Random dice = new Random();
