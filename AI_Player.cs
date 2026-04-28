@@ -51,31 +51,31 @@ namespace Trouble_Group_8_Project
 
         // Entry point
         // returns piece inxed 0-3 or -1 = skip
-        // piecePositions[i] = board idx of piece i or -1 = home
+        // piecePosition[i] = board idx of piece i or -1 = home
 
-        public int ChoosePiece(int diceRoll, int[] piecePosition)
+        public int ChoosePiece(int diceRoll, int[] piecePositions)
         {
             // 1) Can any piece reach a victory square?
-            int win = TryWin(diceRoll, piecePosition);
+            int win = TryWin(diceRoll, piecePositions);
             if (win != -1) return win;
 
             // 2) Can any piece land on an opp?
-            int landOpp = TryLandOpponent(diceRoll, piecePosition);
+            int landOpp = TryLandOpponent(diceRoll, piecePositions);
             if (landOpp != -1) return landOpp;
 
             // 3) Prioritize leaving home when roll a 6
             if (diceRoll == 6)
             {
-                int escape = TryEscapeHome(piecePosition);
+                int escape = TryEscapeHome(piecePositions);
                 if (escape != -1) return escape;
             }
 
             // 4) Move furthest piece
-            int furthest = TryFurthestPiece(diceRoll, piecePosition);
+            int furthest = TryFurthestPiece(diceRoll, piecePositions);
             if (furthest != -1) return furthest;
 
             // 5) Make a legal random move
-            return TryRandom(diceRoll, piecePosition);
+            return TryRandom(diceRoll, piecePositions);
         }
 
         private int TryWin(int roll, int[] positions)
@@ -100,11 +100,38 @@ namespace Trouble_Group_8_Project
 
         private int TryRandom(int roll, int[] positions)
         {
-            return -1;
+            var legal = new List<int>();
+            for (int i = 0; i < 4; i++)
+            {
+                if (positions[i] == -1)
+                {
+                    continue;
+                }
+                if (TestMove(positions[i], roll) != -1)
+                {
+                    legal.Add(i);
+                }
+            }
+            if (legal.Count == 0)
+            {
+                return -1;
+            }
+            return legal[rand.Next(legal.Count)];
         }
 
-
+        private int TestMove(int currIndex, int roll)
+        {
+            int pos = Array.IndexOf(mainBoard, currIndex);
+            if (pos == -1)  // if not on main path
+            {
+                return -1; 
+            }
+            int dest = pos + roll;
+            if (dest >= mainBoard.Length)   // if would overshoot
+            {
+                return -1;
+            }
+            return mainBoard[dest];
+        }
     }
-
-
 }
