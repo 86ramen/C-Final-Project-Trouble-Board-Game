@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -22,13 +23,22 @@ namespace Trouble_Group_8_Project
         private int[] yellowVictoryArray;     // Yellow victory lane outlines
         private int[] greenVictoryArray;      // Green victory lane outlines
         private int[] blueVictoryArray;       // Blue victory lane outlines
-        
+
         public Form1()
         {
             InitializeComponent();
             ConfigureTableLayoutPanel();
             InitializeBoard();
             LoadBoardIntoTableLayout();
+            AI_Player_Test.Run(mainPlayBoardArray, redStartingArray, redVictoryArray,
+                new Dictionary<int, int[]>
+                {
+                    { 1, redStartingArray },
+                    { 2, yellowStartingArray },
+                    { 3, greenStartingArray},
+                    { 4, blueStartingArray }
+                });
+
         }
 
         //hard coded so we Dont muck up the board by acadentaly changing the Form1.cs[design]

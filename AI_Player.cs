@@ -36,17 +36,22 @@ namespace Trouble_Group_8_Project
         private int[] mainBoard;
         private int[] startZone;
         private int[] victoryLane;
+        private int victoryEntryIndex;
+        private int startIndex;
         private Dictionary<int, int[]> colorStartZones; //colorCode -> startZone
         private Random rand = new Random();
 
 
-        public AI_Player(int colorCode, int[] mainBoard, int[] startZone, int[] victoryLane, Dictionary<int, int[]> colorStartZones)
+        public AI_Player(int colorCode, int[] mainBoard, int[] startZone, int[] victoryLane, 
+            int victoryEntryIndex, int startIndex, Dictionary<int, int[]> colorStartZones)
         {
-            colorCode = this.colorCode;
-            mainBoard = this.mainBoard;
-            startZone = this.startZone;
-            victoryLane = this.victoryLane;
-            colorStartZones = this.colorStartZones;
+            this.colorCode = colorCode;
+            this.mainBoard = mainBoard;
+            this.startZone = startZone;
+            this.victoryLane = victoryLane;
+            this.victoryEntryIndex = victoryEntryIndex;
+            this.startIndex = startIndex;
+            this.colorStartZones = colorStartZones;
         }
 
         // Entry point
@@ -55,14 +60,15 @@ namespace Trouble_Group_8_Project
 
         public int ChoosePiece(int diceRoll, int[] piecePositions)
         {
+            
             // 1) Can any piece reach a victory square?
             int win = TryWin(diceRoll, piecePositions);
             if (win != -1) return win;
-
+            /*
             // 2) Can any piece land on an opp?
             int landOpp = TryLandOpponent(diceRoll, piecePositions);
             if (landOpp != -1) return landOpp;
-
+            */
             // 3) Prioritize leaving home when roll a 6
             if (diceRoll == 6)
             {
@@ -73,29 +79,104 @@ namespace Trouble_Group_8_Project
             // 4) Move furthest piece
             int furthest = TryFurthestPiece(diceRoll, piecePositions);
             if (furthest != -1) return furthest;
-
+            
             // 5) Make a legal random move
             return TryRandom(diceRoll, piecePositions);
         }
 
         private int TryWin(int roll, int[] positions)
         {
+            for (int i = 0; i < 4; i++)
+            {
+                if (positions[i] == -1)
+                {
+                    continue;
+                }
+
+                int currentPos = Array.IndexOf(mainBoard, positions[i]);
+                if (currentPos == -1)
+                {
+                    continue;
+                }
+
+                // steps from current position to the exit point
+                int stepsToExit = victoryEntryIndex - currentPos;
+
+                // already passed exit or not close enough
+                if (stepsToExit < 0 || stepsToExit >= roll) continue;
+
+                // remaining steps after exit land in victory lane
+                int victoryIndex = roll - stepsToExit - 1;
+                if (victoryIndex >= 0 && victoryIndex < victoryLane.Length)
+                {
+                    return i;
+                }
+            }
             return -1;
         }
 
         private int TryLandOpponent(int roll, int[] positions)
         {
+            // Collect all opp positions
+            var opponentSquares = new HashSet<int>();
+
+            // NOTE -- turn logic should pass opp positions in
+            // thorugh piecePositions once it's coded in
+
+            // For now, we setect occupied squared by color arrays
+
             return -1;
         }
 
         private int TryEscapeHome(int[] positions)
         {
+            for (int i = 0; i < 4; i++)
+            {
+                if (positions[i] == -1)  // piece is at home
+                {
+                    // make sure the start index isn't blocked by own piece
+                    bool startBlocked = false;
+                    for (int j = 0; j < 4; j++)
+                    {
+                        if (i != j && positions[j] == mainBoard[startIndex])
+                        {
+                            startBlocked = true;
+                            break;
+                        }
+                    }
+                    if (!startBlocked)
+                        return i;
+                }
+            }
             return -1;
         }
 
         private int TryFurthestPiece(int roll, int[] positions)
         {
-            return -1;
+            int bestPiece = -1;
+            int furthest = -1;
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (positions[i] == -1)
+                {
+                    continue;
+                }
+
+                int dest = TestMove(roll, positions[i]);
+                if (dest == -1)
+                {
+                    continue;
+                }
+
+                int progress = GetProgressIdx(positions[i]);
+                if (progress > furthest)
+                {
+                    furthest = progress;
+                    bestPiece = i;
+                }
+            }
+            return bestPiece;
         }
 
         private int TryRandom(int roll, int[] positions)
@@ -107,7 +188,7 @@ namespace Trouble_Group_8_Project
                 {
                     continue;
                 }
-                if (TestMove(positions[i], roll) != -1)
+                if (TestMove(roll, positions[i]) != -1)
                 {
                     legal.Add(i);
                 }
@@ -119,7 +200,7 @@ namespace Trouble_Group_8_Project
             return legal[rand.Next(legal.Count)];
         }
 
-        private int TestMove(int currIndex, int roll)
+        private int TestMove(int roll, int currIndex)
         {
             int pos = Array.IndexOf(mainBoard, currIndex);
             if (pos == -1)  // if not on main path
@@ -132,6 +213,12 @@ namespace Trouble_Group_8_Project
                 return -1;
             }
             return mainBoard[dest];
+        }
+
+        private int GetProgressIdx(int boardIndex)
+        {
+            int pos = Array.IndexOf(mainBoard, boardIndex);
+            return pos; // -1 if not found, which is sorted last
         }
     }
 }
