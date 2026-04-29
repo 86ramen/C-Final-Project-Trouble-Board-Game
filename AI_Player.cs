@@ -42,33 +42,33 @@ namespace Trouble_Group_8_Project
         private Random rand = new Random();
 
 
-        public AI_Player(int colorCode, int[] mainBoard, int[] startZone, int[] victoryLane, 
-            int victoryEntryIndex, int startIndex, Dictionary<int, int[]> colorStartZones)
+        public AI_Player(int colorCode, int[] mainBoard, int[] startZone, int[] victoryLane,
+     Dictionary<int, int[]> colorStartZones, int victoryEntryIndex, int startIndex)
         {
             this.colorCode = colorCode;
             this.mainBoard = mainBoard;
             this.startZone = startZone;
             this.victoryLane = victoryLane;
+            this.colorStartZones = colorStartZones;
             this.victoryEntryIndex = victoryEntryIndex;
             this.startIndex = startIndex;
-            this.colorStartZones = colorStartZones;
         }
 
         // Entry point
         // returns piece inxed 0-3 or -1 = skip
         // piecePosition[i] = board idx of piece i or -1 = home
 
-        public int ChoosePiece(int diceRoll, int[] piecePositions)
+        public int ChoosePiece(int diceRoll, int[] piecePositions, HashSet<int> opponentSquares)
         {
             
             // 1) Can any piece reach a victory square?
             int win = TryWin(diceRoll, piecePositions);
             if (win != -1) return win;
-            /*
+            
             // 2) Can any piece land on an opp?
-            int landOpp = TryLandOpponent(diceRoll, piecePositions);
+            int landOpp = TryLandOpponent(diceRoll, piecePositions, opponentSquares);
             if (landOpp != -1) return landOpp;
-            */
+            
             // 3) Prioritize leaving home when roll a 6
             if (diceRoll == 6)
             {
@@ -115,16 +115,18 @@ namespace Trouble_Group_8_Project
             return -1;
         }
 
-        private int TryLandOpponent(int roll, int[] positions)
+        private int TryLandOpponent(int roll, int[] positions, HashSet<int> opponentSquares)
         {
-            // Collect all opp positions
-            var opponentSquares = new HashSet<int>();
+            for (int i = 0; i < 4; i++)
+            {
+                if (positions[i] == -1) continue;
 
-            // NOTE -- turn logic should pass opp positions in
-            // thorugh piecePositions once it's coded in
+                int dest = TestMove(roll, positions[i]);
+                if (dest == -1) continue;
 
-            // For now, we setect occupied squared by color arrays
-
+                if (opponentSquares.Contains(dest))
+                    return i;
+            }
             return -1;
         }
 
