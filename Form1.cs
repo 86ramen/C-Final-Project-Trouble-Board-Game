@@ -4,11 +4,16 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using System.Linq;
+using System.Media;
+using WMPLib;
+
 
 namespace Trouble_Group_8_Project
 {
     public partial class Form1 : Form
     {
+        private WindowsMediaPlayer backgroundMusic = new WindowsMediaPlayer();
+
         private (int Color, bool Functional, Color OutlineColor)[] boardCells;
         private Random dice = new Random(); // For Dice value 1-6
 
@@ -47,6 +52,12 @@ namespace Trouble_Group_8_Project
         {
             // Structure of the board / Player Color and Message Logic
             InitializeComponent();
+
+            backgroundMusic.URL = "Sounds/pripac-soft-chill-vibes-323673.wav";
+            backgroundMusic.settings.setMode("loop", true);
+            backgroundMusic.settings.volume = 25;
+            backgroundMusic.controls.play();
+
             ConfigureTableLayoutPanel();
             InitializeBoard();
             AskPlayerColor();
@@ -375,8 +386,8 @@ namespace Trouble_Group_8_Project
             else if (index == 6)
                 return "↓";    // Down
             else
-                return index.ToString(); // used to make deubbuging easier so u can see the empty values------- 
-                //return "";
+                //return index.ToString(); // used to make deubbuging easier so u can see the empty values------- 
+                return "";
         }
 
         // Letter for the color and place of the starting spots for the pieces 
@@ -445,6 +456,7 @@ namespace Trouble_Group_8_Project
 
         //Actions of the Player 
         // EXIT, ROLL, SAVE, LOAD
+
         private void Form1_Click(object sender, EventArgs e)
         {
             Panel clickedPanel = sender as Panel;
@@ -454,19 +466,27 @@ namespace Trouble_Group_8_Project
 
             if (index == 0) // Exists and stops the program when quit is pressed at index 0
             {
+                SoundPlayer soundQuit = new SoundPlayer("Sounds/universfield-computer-mouse-click-352734.wav");
+                soundQuit.PlaySync();
                 Application.Exit();
                 return;
             }
             else if (index == 7) // Saves game when saved is pressed at index 7
             {
                 SaveGame();
+                SoundPlayer soundSave = new SoundPlayer("Sounds/universfield-computer-mouse-click-352734.wav");
+                soundSave.PlaySync();
                 MessageBox.Show("Game saved", "Save", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             else if (index == 8) // Load when the load is pressed at index 8
-            {
+            {     
+                
+                SoundPlayer soundLoad = new SoundPlayer("Sounds/universfield-computer-mouse-click-352734.wav");
+                soundLoad.PlaySync();
                 LoadGame();
                 LoadBoardIntoTableLayout();
+
                 MessageBox.Show("Game loaded", "Load", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -525,7 +545,20 @@ namespace Trouble_Group_8_Project
             // Checks if the current color has won after everymove
             if (CheckWinner(currentTurnColor))
             {
+                backgroundMusic.controls.stop();
+
+                SoundPlayer soundWin = new SoundPlayer("Sounds/puyopuyomegafan1234-winner-game-sound-404167.wav");
+                soundWin.Play();
                 MessageBox.Show(GetColorName(currentTurnColor) + " wins!!!");
+
+                foreach(Control c in tableLayoutPanel1.Controls)
+                {
+                    if((int)c.Tag == 40)
+                    {
+                        c.Enabled = false;
+                    }
+                }
+
                 return;
             }
 
@@ -555,7 +588,10 @@ namespace Trouble_Group_8_Project
             hasRolled = true;
 
             // Shows who rolled what 
+            SoundPlayer rollDice = new SoundPlayer("Sounds/freesound_community-dice_roll-96878.wav");
+            rollDice.Play();
             MessageBox.Show(GetColorName(currentTurnColor) + " rolled a " + currentDiceRoll);
+
 
             // Cheeking if any move is possible, like not rolling a 6 to get out 
             List<int> validMoves = GetValidPieces(currentTurnColor, currentDiceRoll);
@@ -563,7 +599,9 @@ namespace Trouble_Group_8_Project
             // If no valid moves, then message about not being able to leave the starting area.
             if (validMoves.Count == 0)
             {
-                MessageBox.Show("No Valid Moves. Roll a 6 to Leave Base Area.");
+                SoundPlayer soundWrongPlayerMove = new SoundPlayer("Sounds/lesiakower-error-mistake-sound-effect-incorrect-answer-437420.wav");
+                soundWrongPlayerMove.Play();
+                MessageBox.Show(GetColorName(currentTurnColor) + " (Player) has no valid moves. Turn skipped.");
                 EndTurn();
                 return;
             }
@@ -575,6 +613,8 @@ namespace Trouble_Group_8_Project
             // Roll for AI
             currentDiceRoll = dice.Next(1, 7);
             hasRolled = true;
+            SoundPlayer AiRollDice = new SoundPlayer("Sounds/freesound_community-dice_roll-96878.wav");
+            AiRollDice.Play();
             MessageBox.Show(GetColorName(currentTurnColor) + " (AI) rolled a " + currentDiceRoll);
 
             int[] dbgPieces = GetPiecesArray(currentTurnColor);
@@ -585,6 +625,8 @@ namespace Trouble_Group_8_Project
 
             if (validMoves.Count == 0)
             {
+                SoundPlayer soundAiWrongMove = new SoundPlayer("Sounds/lesiakower-error-mistake-sound-effect-incorrect-answer-437420.wav");
+                soundAiWrongMove.Play();
                 MessageBox.Show(GetColorName(currentTurnColor) + " (AI) has no valid moves. Turn skipped.");
                 hasRolled = false;
                 currentDiceRoll = 0;
@@ -655,7 +697,20 @@ namespace Trouble_Group_8_Project
 
             if (CheckWinner(currentTurnColor))
             {
+
+                backgroundMusic.controls.stop();
+
+                SoundPlayer soundAIWin = new SoundPlayer("Sounds/puyopuyomegafan1234-winner-game-sound-404167.wav");
+                soundAIWin.Play();
                 MessageBox.Show(GetColorName(currentTurnColor) + " (AI) wins!!!");
+
+                foreach(Control c in tableLayoutPanel1.Controls)
+                {
+                    if((int)c.Tag == 40)
+                    {
+                        c.Enabled = false;
+                    }
+                }
                 return;
             }
 
@@ -759,7 +814,7 @@ namespace Trouble_Group_8_Project
             } // So, where you are right now PLUS the value of the roll.
 
             int targetBoardIndex = GetBoardIndexFromProgress(color, newProgress); // Looking where the piece will land at the square index on the board
-            int occupantColor = GetPieceColorAtBoardIndex(targetBoardIndex); // Checking if that sqaure spit 
+            int occupantColor = GetOccupantColorOnBoard(targetBoardIndex); // Checking if that sqaure spit 
 
             // If color piece at the square is not empty and not the PLAYER color, 
             if (occupantColor != 0 && occupantColor != color)
@@ -768,6 +823,9 @@ namespace Trouble_Group_8_Project
             }
 
             pieces[pieceIndex] = newProgress; // Updating the piece's position at the board
+
+            SoundPlayer soundMove = new SoundPlayer("Sounds/freesound_community-moving-with-table-105076.wav");
+            soundMove.Play();  
             return true;
         }
 
@@ -787,6 +845,8 @@ namespace Trouble_Group_8_Project
                 if (enemyBoardIndex == boardIndex)
                 {
                     enemyPieces[i] = -1;
+                    SoundPlayer soundSentHome = new SoundPlayer("Sounds/freesound_community-jump-sound-14839.wav");
+                    soundSentHome.Play();
                     MessageBox.Show(GetColorName(enemyColor) + " piece sent home!");
                     return;
                 }
