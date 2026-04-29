@@ -49,9 +49,24 @@ namespace Trouble_Group_8_Project
             InitializeComponent();
             ConfigureTableLayoutPanel();
             InitializeBoard();
-            AskPlayerColor(); // Color Choosing for the player //
+            AskPlayerColor();
             LoadBoardIntoTableLayout();
-            ShowTurnMessage(); // Showing who's turn is it //
+
+            this.Shown += (s, e) =>
+            {
+                ShowTurnMessage(); // Showing who's turn is it //
+                if (!isPlayer[currentTurnColor])     // if first turn is AI, kick it off automatically
+                {
+
+                    AITurn();
+                }
+            };
+        }
+
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
 
         // Method in setting up the board by code instead of doing it manually in the actual Form to prevent errors
@@ -427,6 +442,7 @@ namespace Trouble_Group_8_Project
                 return Color.Gray;
         }
 
+
         //Actions of the Player 
         // EXIT, ROLL, SAVE, LOAD
         private void Form1_Click(object sender, EventArgs e)
@@ -562,8 +578,7 @@ namespace Trouble_Group_8_Project
             MessageBox.Show(GetColorName(currentTurnColor) + " (AI) rolled a " + currentDiceRoll);
 
             int[] dbgPieces = GetPiecesArray(currentTurnColor);
-            System.Diagnostics.Debug.WriteLine($"Color={currentTurnColor} Pieces progress: {dbgPieces[0]},{dbgPieces[1]},{dbgPieces[2]},{dbgPieces[3]} roll={currentDiceRoll}");
-
+            
 
             // Check if any moves are possible
             List<int> validMoves = GetValidPieces(currentTurnColor, currentDiceRoll);
@@ -628,7 +643,7 @@ namespace Trouble_Group_8_Project
 
             // Ask AI which piece to move
             int chosenPiece = ai.ChoosePiece(currentDiceRoll, boardPositions, opponentPositions, progressValues);
-            System.Diagnostics.Debug.WriteLine($"Color={currentTurnColor} roll={currentDiceRoll} progress: {progressValues[0]},{progressValues[1]},{progressValues[2]},{progressValues[3]} chosen={chosenPiece}");
+           
             // Fallback to first valid move if AI returns -1
             if (chosenPiece == -1 || !validMoves.Contains(chosenPiece))
                 chosenPiece = validMoves[0];
@@ -942,13 +957,13 @@ namespace Trouble_Group_8_Project
             // Reseting dice for the next player 
             hasRolled = false;
             currentDiceRoll = 0;
-
             currentTurnColor++; // Moving to next plauer 
 
             if (currentTurnColor > 4) // Looping throuhg all 4 players, not 5
             {
                 currentTurnColor = 1;
             }
+
 
             ShowTurnMessage(); // Showing who's turn is it
 

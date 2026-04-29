@@ -76,8 +76,8 @@ namespace Trouble_Group_8_Project
                 if (escape != -1) return escape;
             }
 
-            // 4) Move furthest piece
-            int furthest = TryFurthestPiece(diceRoll, piecePositions, progressValues);
+            // 4) Move furthest piece or the pice blocking enterance
+            int furthest = TryBestPiece(diceRoll, piecePositions, progressValues);
             if (furthest != -1) return furthest;
             
             // 5) Make a legal random move
@@ -153,10 +153,12 @@ namespace Trouble_Group_8_Project
             return -1;
         }
 
-        private int TryFurthestPiece(int roll, int[] positions, int[] progressValues)
+        private int TryBestPiece(int roll, int[] positions, int[] progressValues)
         {
             int bestPiece = -1;
             int furthest = -1;
+
+            bool anyAtHome = positions.Any(p => p == -1);
 
             for (int i = 0; i < 4; i++)
             {
@@ -165,13 +167,34 @@ namespace Trouble_Group_8_Project
                 int dest = TestMove(roll, positions[i]);
                 if (dest == -1) continue;
 
-                // use raw progress — already relative to this color's entry
+                // if pieces are still at home, avoid landing on the entry square
+                if (anyAtHome && dest == mainBoard[startIndex])
+                    continue;
+
                 if (progressValues[i] > furthest)
                 {
                     furthest = progressValues[i];
                     bestPiece = i;
                 }
             }
+
+            // if all moves land on entry square, just pick furthest anyway
+            // to avoid getting completely stuck
+            if (bestPiece == -1)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (positions[i] == -1) continue;
+                    int dest = TestMove(roll, positions[i]);
+                    if (dest == -1) continue;
+                    if (progressValues[i] > furthest)
+                    {
+                        furthest = progressValues[i];
+                        bestPiece = i;
+                    }
+                }
+            }
+
             return bestPiece;
         }
 
