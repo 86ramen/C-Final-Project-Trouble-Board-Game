@@ -479,10 +479,8 @@ namespace Trouble_Group_8_Project
                 return;
             }
 
-            System.Diagnostics.Debug.WriteLine($"BEFORE MOVE: currentDiceRoll={currentDiceRoll}");
             // Looks into the current color, index, and current dice roll to make sure it is an allowed move for the player 
             bool moved = TryMovePiece(currentTurnColor, pieceIndex, currentDiceRoll);
-            System.Diagnostics.Debug.WriteLine($"AFTER MOVE: currentDiceRoll={currentDiceRoll}");
 
             if (!moved)
             {
@@ -548,6 +546,10 @@ namespace Trouble_Group_8_Project
             hasRolled = true;
             MessageBox.Show(GetColorName(currentTurnColor) + " (AI) rolled a " + currentDiceRoll);
 
+            int[] dbgPieces = GetPiecesArray(currentTurnColor);
+            System.Diagnostics.Debug.WriteLine($"Color={currentTurnColor} Pieces progress: {dbgPieces[0]},{dbgPieces[1]},{dbgPieces[2]},{dbgPieces[3]} roll={currentDiceRoll}");
+
+
             // Check if any moves are possible
             List<int> validMoves = GetValidPieces(currentTurnColor, currentDiceRoll);
 
@@ -563,13 +565,16 @@ namespace Trouble_Group_8_Project
             // Build board position array from his progress system for AI_Player
             int[] pieces = GetPiecesArray(currentTurnColor);
             int[] boardPositions = new int[4];
+            int[] progressValues = new int[4]; // for ai to see furthest
             for (int i = 0; i < 4; i++)
             {
+                progressValues[i] = pieces[i]; // raw progress, -1 if home
                 if (pieces[i] == -1)
                     boardPositions[i] = -1; // still at home
                 else
                     boardPositions[i] = GetBoardIndexFromProgress(currentTurnColor, pieces[i]);
             }
+
 
             var opponentPositions = new HashSet<int>();
             for (int c = 1; c <= 4; c++)
@@ -584,7 +589,7 @@ namespace Trouble_Group_8_Project
             }
 
             // exitIndices and entryIndices per color (index 0 unused, colors are 1-4)
-            int[] exitIndices = { 0, 1, 6, 19, 13 };
+            int[] exitIndices = { 0, 23, 5, 11, 17 };
             int[] entryIndices = { 0, 0, 6, 12, 18 };
 
             // Build AI instance for current color
@@ -607,8 +612,8 @@ namespace Trouble_Group_8_Project
             );
 
             // Ask AI which piece to move
-            int chosenPiece = ai.ChoosePiece(currentDiceRoll, boardPositions, opponentPositions);
-
+            int chosenPiece = ai.ChoosePiece(currentDiceRoll, boardPositions, opponentPositions, progressValues);
+            System.Diagnostics.Debug.WriteLine($"Color={currentTurnColor} roll={currentDiceRoll} progress: {progressValues[0]},{progressValues[1]},{progressValues[2]},{progressValues[3]} chosen={chosenPiece}");
             // Fallback to first valid move if AI returns -1
             if (chosenPiece == -1 || !validMoves.Contains(chosenPiece))
                 chosenPiece = validMoves[0];
@@ -707,7 +712,6 @@ namespace Trouble_Group_8_Project
         // Moving the piece 
         private bool TryMovePiece(int color, int pieceIndex, int roll)
         {
-            System.Diagnostics.Debug.WriteLine($"TryMovePiece: color={color} piece={pieceIndex} roll={roll} currentProgress={GetPiecesArray(color)[pieceIndex]}");
             // Cheking if the move is valid 
             if (!CanMovePiece(color, pieceIndex, roll))
             {
@@ -772,7 +776,6 @@ namespace Trouble_Group_8_Project
         // Converts progress into real board square number
         private int GetBoardIndexFromProgress(int color, int progress)
         {
-            System.Diagnostics.Debug.WriteLine($"GetBoardIndexFromProgress: color={color} progress={progress} entryProgress[color]={entryProgress[color]}");
             if (progress >= 0 && progress <= 23) // Piece on the main board
             {
                 int position = (entryProgress[color] + progress) % 24; // The board position loop for each color

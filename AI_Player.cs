@@ -58,7 +58,7 @@ namespace Trouble_Group_8_Project
         // returns piece inxed 0-3 or -1 = skip
         // piecePosition[i] = board idx of piece i or -1 = home
 
-        public int ChoosePiece(int diceRoll, int[] piecePositions, HashSet<int> opponentSquares)
+        public int ChoosePiece(int diceRoll, int[] piecePositions, HashSet<int> opponentSquares, int[] progressValues)
         {
             
             // 1) Can any piece reach a victory square?
@@ -77,7 +77,7 @@ namespace Trouble_Group_8_Project
             }
 
             // 4) Move furthest piece
-            int furthest = TryFurthestPiece(diceRoll, piecePositions);
+            int furthest = TryFurthestPiece(diceRoll, piecePositions, progressValues);
             if (furthest != -1) return furthest;
             
             // 5) Make a legal random move
@@ -153,28 +153,22 @@ namespace Trouble_Group_8_Project
             return -1;
         }
 
-        private int TryFurthestPiece(int roll, int[] positions)
+        private int TryFurthestPiece(int roll, int[] positions, int[] progressValues)
         {
             int bestPiece = -1;
             int furthest = -1;
 
             for (int i = 0; i < 4; i++)
             {
-                if (positions[i] == -1)
-                {
-                    continue;
-                }
+                if (positions[i] == -1) continue;
 
                 int dest = TestMove(roll, positions[i]);
-                if (dest == -1)
-                {
-                    continue;
-                }
+                if (dest == -1) continue;
 
-                int progress = GetProgressIdx(positions[i]);
-                if (progress > furthest)
+                // use raw progress — already relative to this color's entry
+                if (progressValues[i] > furthest)
                 {
-                    furthest = progress;
+                    furthest = progressValues[i];
                     bestPiece = i;
                 }
             }
@@ -215,12 +209,6 @@ namespace Trouble_Group_8_Project
                 return -1;
             }
             return mainBoard[dest];
-        }
-
-        private int GetProgressIdx(int boardIndex)
-        {
-            int pos = Array.IndexOf(mainBoard, boardIndex);
-            return pos; // -1 if not found, which is sorted last
         }
     }
 }
