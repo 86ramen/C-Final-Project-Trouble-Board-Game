@@ -199,15 +199,19 @@ namespace Trouble_Group_8_Project
         private int TestMove(int roll, int currIndex)
         {
             int pos = Array.IndexOf(mainBoard, currIndex);
-            if (pos == -1)  // if not on main path
-            {
-                return -1; 
-            }
+            if (pos == -1) return -1; // not on main board
+
             int dest = pos + roll;
-            if (dest >= mainBoard.Length)   // if would overshoot
+
+            // would enter or land in victory lane — still a valid move
+            if (dest >= mainBoard.Length)
             {
-                return -1;
+                int victoryIndex = dest - mainBoard.Length;
+                if (victoryIndex < victoryLane.Length)
+                    return victoryLane[victoryIndex]; // valid, returns victory square
+                return -1; // overshoots victory lane
             }
+
             return mainBoard[dest];
         }
     }

@@ -288,6 +288,21 @@ namespace Trouble_Group_8_Project
             tableLayoutPanel1.ResumeLayout(); // Allows board to lad all at once
         }
 
+        private void RefreshBoard()
+        {
+            foreach (Control c in tableLayoutPanel1.Controls)
+            {
+                if (!(c is Panel panel)) continue;
+                int index = (int)panel.Tag;
+                panel.BackColor = GetDisplayColor(index);
+
+                if (panel.Controls.Count > 0 && panel.Controls[0] is Label label)
+                    label.Text = GetDisplayText(index);
+
+                panel.Invalidate(); // redraws victory borders
+            }
+        }
+
         // Text for the cells that is hardcoded
         private Panel CreateCell(int index)
         {
@@ -489,7 +504,7 @@ namespace Trouble_Group_8_Project
             }
 
             // Loads board to continue and safety
-            LoadBoardIntoTableLayout();
+            RefreshBoard();
 
             // Checks if the current color has won after everymove
             if (CheckWinner(currentTurnColor))
@@ -621,17 +636,7 @@ namespace Trouble_Group_8_Project
             // Execute move using his existing movement system
             bool moved = TryMovePiece(currentTurnColor, chosenPiece, currentDiceRoll);
 
-            if (!moved)
-            {
-                // Safety fallback — try any valid piece
-                foreach (int v in validMoves)
-                {
-                    if (TryMovePiece(currentTurnColor, v, currentDiceRoll))
-                        break;
-                }
-            }
-
-            LoadBoardIntoTableLayout();
+            RefreshBoard();
 
             if (CheckWinner(currentTurnColor))
             {
