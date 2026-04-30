@@ -242,6 +242,7 @@ namespace Trouble_Group_8_Project
             // Gets the choosen option of the player and the not choosen into an array //
             CheckBox[] boxes = { red, yellow, green, blue };
 
+            /* //Singleplayer ONLY
             // Goes through the array //
             foreach (CheckBox box in boxes)
             {
@@ -262,8 +263,8 @@ namespace Trouble_Group_8_Project
                                 other.Checked = false;
                         }
                     }
-                };
-            }
+                }; 
+            }*/
 
             // Button to start the game  //
             Button start = new Button();
@@ -278,7 +279,7 @@ namespace Trouble_Group_8_Project
             {
                 if (!red.Checked && !yellow.Checked && !green.Checked && !blue.Checked)
                 {
-                    MessageBox.Show("Please Pick a Color.");
+                    MessageBox.Show("Please Pick at least one Color.");
                     return;
                 }
 
